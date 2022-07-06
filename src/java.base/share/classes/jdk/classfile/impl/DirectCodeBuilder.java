@@ -106,19 +106,18 @@ public final class DirectCodeBuilder
         DirectCodeBuilder cb;
         try {
             handler.accept(cb = new DirectCodeBuilder(methodInfo, constantPool, original, false));
-            cb.buildContent();
+            return cb.buildContent();
         } catch (LabelOverflowException loe) {
             if (constantPool.optionValue(Classfile.Option.Key.FIX_SHORT_JUMPS)) {
                 handler.accept(cb = new DirectCodeBuilder(methodInfo, constantPool, original, true));
-                cb.buildContent();
+                return cb.buildContent();
             }
             else
                 throw loe;
         }
-        return cb.content;
     }
 
-    private DirectCodeBuilder(MethodInfo methodInfo,
+    public DirectCodeBuilder(MethodInfo methodInfo,
                               ConstantPoolBuilder constantPool,
                               CodeModel original,
                               boolean transformFwdJumps) {
@@ -199,8 +198,8 @@ public final class DirectCodeBuilder
         }
     }
 
-    private void buildContent() {
-        if (content != null) return;
+    public Attribute<CodeAttribute> buildContent() {
+        if (content != null) return content;
         setLabelTarget(endLabel);
 
         // Backfill branches for which Label didn't have position yet
@@ -310,6 +309,8 @@ public final class DirectCodeBuilder
                 buf.setLabelResolver(null);
             }
         };
+
+        return content;
     }
 
     private static class DedupLineNumberTableAttribute extends UnboundAttribute.AdHocAttribute<LineNumberTableAttribute> {

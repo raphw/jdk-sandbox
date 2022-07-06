@@ -42,6 +42,7 @@ import jdk.classfile.constantpool.ConstantPoolBuilder;
 import jdk.classfile.constantpool.PackageEntry;
 import jdk.classfile.constantpool.Utf8Entry;
 import jdk.classfile.impl.ClassImpl;
+import jdk.classfile.impl.OpenBuilderImpl;
 import jdk.classfile.impl.DirectClassBuilder;
 import jdk.classfile.impl.Options;
 import jdk.classfile.impl.UnboundAttribute;
@@ -214,6 +215,23 @@ public class Classfile {
         DirectClassBuilder builder = new DirectClassBuilder(constantPool, thisClassEntry);
         handler.accept(builder);
         return builder.build();
+    }
+
+    public static OpenBuilder.OpenClassBuilder buildOpen(ClassDesc thisClass) {
+        return buildOpen(thisClass, Collections.emptySet());
+    }
+
+    public static OpenBuilder.OpenClassBuilder buildOpen(ClassDesc thisClass,
+                                                         Collection<Option<?>> options) {
+        ConstantPoolBuilder pool = ConstantPoolBuilder.of(options);
+        return buildOpen(pool.classEntry(thisClass), pool);
+    }
+
+    public static OpenBuilder.OpenClassBuilder buildOpen(ClassEntry thisClassEntry,
+                                                         ConstantPoolBuilder constantPool) {
+        thisClassEntry = constantPool.maybeClone(thisClassEntry);
+        DirectClassBuilder builder = new DirectClassBuilder(constantPool, thisClassEntry);
+        return new OpenBuilderImpl.OpenClassBuilderImpl(builder);
     }
 
     /**

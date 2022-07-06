@@ -34,6 +34,7 @@ import jdk.classfile.jdktypes.ModuleDesc;
 import jdk.classfile.jdktypes.PackageDesc;
 
 import java.lang.constant.ClassDesc;
+import java.util.function.Consumer;
 import java.util.*;
 
 public final class ModuleAttributeBuilderImpl
@@ -54,10 +55,13 @@ public final class ModuleAttributeBuilderImpl
         this.moduleFlags = 0;
     }
 
-    @Override
     public ModuleAttribute build() {
         return new UnboundAttribute.UnboundModuleAttribute(moduleEntry, moduleFlags, moduleVersion,
-                                                            requires, exports, opens, uses, provides);
+                                                            new LinkedHashSet<>(requires),
+                                                            new LinkedHashSet<>(exports),
+                                                            new LinkedHashSet<>(opens),
+                                                            new LinkedHashSet<>(uses),
+                                                            new LinkedHashSet<>(provides));
     }
 
     @Override
@@ -151,5 +155,34 @@ public final class ModuleAttributeBuilderImpl
         Objects.requireNonNull(provides);
         this.provides.add(provides);
         return this;
+    }
+
+    public final static class OpenModuleAttributeBuilderImpl implements ModuleAttribute.OpenModuleAttributeBuilder {
+
+        private final ModuleAttributeBuilderImpl moduleAttributeBuilder;
+
+        private boolean closed;
+
+        public OpenModuleAttributeBuilderImpl(ModuleAttributeBuilderImpl moduleAttributeBuilder) {
+            this.moduleAttributeBuilder = moduleAttributeBuilder;
+        }
+
+        public void accept(Consumer<? super ModuleAttributeBuilder> handler) {
+            if (closed) {
+                throw new IllegalStateException();
+            }
+            handler.accept(moduleAttributeBuilder);
+        }
+
+        @Override
+        public ModuleAttribute build() {
+            close();
+            return moduleAttributeBuilder.build();
+        }
+
+        @Override
+        public void close() {
+            closed = true;
+        }
     }
 }

@@ -136,6 +136,11 @@ public sealed interface ModuleAttribute
         return  mb.build();
     }
 
+    static OpenModuleAttributeBuilder of(ModuleDesc moduleName) {
+        var moduleAttributeBuilder = new ModuleAttributeBuilderImpl(moduleName);
+        return new ModuleAttributeBuilderImpl.OpenModuleAttributeBuilderImpl(moduleAttributeBuilder);
+    }
+
     public sealed interface ModuleAttributeBuilder
             permits ModuleAttributeBuilderImpl {
 
@@ -169,7 +174,15 @@ public sealed interface ModuleAttribute
 
         ModuleAttributeBuilder provides(ClassDesc service, ClassDesc... implClasses);
         ModuleAttributeBuilder provides(ModuleProvideInfo provides);
+    }
+
+    public sealed interface OpenModuleAttributeBuilder
+            extends Consumer<Consumer<? super ModuleAttributeBuilder>>, AutoCloseable
+            permits ModuleAttributeBuilderImpl.OpenModuleAttributeBuilderImpl{
 
         ModuleAttribute build();
+
+        @Override
+        void close();
     }
 }
